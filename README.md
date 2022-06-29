@@ -39,6 +39,8 @@ sudo ./forward -s '/var/run/docker.sock:/docker/:-POST,-PUT,-DELETE'
 
 ### Docker
 
+There are scratch and alpine version of container image.
+
 ```sh
 docker run -p 8080:8080 -v /var/run/docker.sock:/docker.sock ghcr.io/worldline-go/forward -s /docker.sock:/docker/:-POST,-PUT,-DELETE,-PATCH
 ```

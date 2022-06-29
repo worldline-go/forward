@@ -17,6 +17,7 @@ var (
 )
 
 func main() {
+	// change information
 	info.AppInfo.Version = version
 	info.AppInfo.BuildCommit = commit
 	info.AppInfo.BuildDate = date

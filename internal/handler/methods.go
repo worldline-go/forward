@@ -1,6 +1,9 @@
 package handler
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // FilterMethods using in handler http.
 // default Allow has all methods.
@@ -72,5 +75,9 @@ func printMethods(methods map[string]struct{}) string {
 	for k := range methods {
 		keys = append(keys, k)
 	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
 	return strings.Join(keys, ",")
 }

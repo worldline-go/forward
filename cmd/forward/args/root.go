@@ -16,8 +16,8 @@ import (
 var rootCmd = &cobra.Command{
 	Use:     "forward",
 	Short:   "export connections",
-	Long:    "export socket to HTTP\n" + "version: " + info.AppInfo.Version + " commit: " + info.AppInfo.BuildCommit + " buildDate:" + info.AppInfo.BuildDate,
-	Version: info.AppInfo.Version,
+	Long:    "export socket to HTTP",
+	Version: "v0.0.0",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		config.InitializeLog()
 		config.SetLogLevel(config.Application.LogLevel)
@@ -29,6 +29,8 @@ var rootCmd = &cobra.Command{
 
 // Execute is the entry point for the application.
 func Execute(ctx context.Context) error {
+	rootCmd.Version = info.AppInfo.Version
+	rootCmd.Long += "\nversion: " + info.AppInfo.Version + " commit: " + info.AppInfo.BuildCommit + " buildDate:" + info.AppInfo.BuildDate
 	return rootCmd.ExecuteContext(ctx)
 }
 

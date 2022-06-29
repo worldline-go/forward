@@ -68,7 +68,22 @@ changelog:
 dockers:
 - image_templates:
   - 'ghcr.io/worldline-go/forward:{{ .Tag }}'
-  dockerfile: Dockerfile
+  dockerfile: ci/Dockerfile
+  build_flag_templates:
+  - "--pull"
+  - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/worldline-go/forward/main/README.md"
+  - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Eray Ates\",\"email\":\"eates23@gmail.com\"}]"
+  - "--label=io.artifacthub.package.license=Apache-2.0"
+  - "--label=org.opencontainers.image.description=Export socket to HTTP"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/amd64"
+- image_templates:
+  - 'ghcr.io/worldline-go/forward:{{ .Tag }}-alpine'
+  dockerfile: ci/alpine.Dockerfile
   build_flag_templates:
   - "--pull"
   - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/worldline-go/forward/main/README.md"

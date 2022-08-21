@@ -1,0 +1,10 @@
+router:
+  tcpListen:
+  - name: local
+    host: localhost:9090
+  tcpConnect:
+  - name: connect
+    url: localhost:8080
+  forward:
+  - from: local
+    to: connect

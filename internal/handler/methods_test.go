@@ -10,13 +10,16 @@ func TestFilterMethods_Parse(t *testing.T) {
 		Allow map[string]struct{}
 		Deny  map[string]struct{}
 	}
+
 	type match struct {
 		Method string
 		Check  bool
 	}
+
 	type args struct {
 		methods []string
 	}
+
 	tests := []struct {
 		name   string
 		want   want

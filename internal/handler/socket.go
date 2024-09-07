@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// SocketDirector is a reverse proxy director that rewrites the URL path to
+// SocketDirector is a reverse proxy director that touch request before sending to the socket.
 func SocketDirector(req *http.Request) {
 	req.Header.Add("X-Forwarded-Host", req.Host)
 	req.URL.Scheme = "http"
@@ -49,7 +49,6 @@ func SocketHandler(socketURLPath string, socketPath string, methods *FilterMetho
 			return
 		}
 
-		// TODO: return allowed methods
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Method not allowed")) //nolint:errcheck
 	}

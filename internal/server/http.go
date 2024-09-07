@@ -23,8 +23,9 @@ type Server struct {
 
 // ServeHTTP returns a new HTTP server.
 func ServeHTTP() []Server {
-	values := Parse(config.Application.Hosts, config.Application.Sockets)
 	var servers []Server
+
+	values := Parse(config.Application.Hosts, config.Application.Sockets)
 
 	for _, value := range values {
 		mux := http.NewServeMux()
@@ -56,6 +57,7 @@ func StartHTTP(server []Server) error {
 	for _, s := range server {
 		group.Go(func() error {
 			slog.Info(fmt.Sprintf("server %s on [%s]", s.Name, s.Server.Addr))
+
 			if err := s.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				return err
 			}
@@ -86,6 +88,7 @@ func StopHTTP(server []Server) error {
 		}
 
 		wg.Add(1)
+
 		go func(name string, s *http.Server) {
 			defer wg.Done()
 

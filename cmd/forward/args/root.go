@@ -5,11 +5,10 @@ import (
 	"log/slog"
 
 	"github.com/rakunlabs/into"
+	"github.com/spf13/cobra"
 	"github.com/worldline-go/forward/internal/config"
 	"github.com/worldline-go/forward/internal/info"
 	"github.com/worldline-go/forward/internal/server"
-
-	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -32,6 +31,7 @@ var rootCmd = &cobra.Command{
 func Execute(ctx context.Context) error {
 	rootCmd.Version = info.AppInfo.Version
 	rootCmd.Long += "\n" + longInfo()
+
 	return rootCmd.ExecuteContext(ctx)
 }
 

@@ -1,8 +1,10 @@
-package server
+package server_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/worldline-go/forward/internal/server"
 )
 
 func TestParse(t *testing.T) {
@@ -10,10 +12,11 @@ func TestParse(t *testing.T) {
 		hosts   []string
 		sockets []string
 	}
+
 	tests := []struct {
 		name string
 		args args
-		want []Holder
+		want []server.Holder
 	}{
 		{
 			name: "default",
@@ -21,7 +24,7 @@ func TestParse(t *testing.T) {
 				hosts:   []string{"0.0.0.0:8080"},
 				sockets: []string{"/docker/:*,-POST,-PUT,-DELETE"},
 			},
-			want: []Holder{
+			want: []server.Holder{
 				{
 					Name:   "default",
 					Host:   "0.0.0.0:8080",
@@ -35,7 +38,7 @@ func TestParse(t *testing.T) {
 				hosts:   []string{"default@0.0.0.0:8080", "test@0.0.0.0:8081"},
 				sockets: []string{"/docker/:*,-POST,-PUT,-DELETE", "test@/docker/:*,-POST,-PUT,-DELETE"},
 			},
-			want: []Holder{
+			want: []server.Holder{
 				{
 					Name:   "default",
 					Host:   "0.0.0.0:8080",
@@ -49,9 +52,10 @@ func TestParse(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Parse(tt.args.hosts, tt.args.sockets); !reflect.DeepEqual(got, tt.want) {
+			if got := server.Parse(tt.args.hosts, tt.args.sockets); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parse() = %v, want %v", got, tt.want)
 			}
 		})

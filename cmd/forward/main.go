@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	// Populated by goreleaser during build
 	version = "v0.0.0"
 	commit  = "-"
 	date    = "-"

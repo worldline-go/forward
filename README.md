@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/worldline-go/forward?color=red&style=flat-square)](https://raw.githubusercontent.com/worldline-go/forward/main/LICENSE)
 [![Coverage](https://img.shields.io/sonar/coverage/worldline-go_forward?logo=sonarcloud&server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/summary/overall?id=worldline-go_forward)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/worldline-go/forward/Test?logo=github&style=flat-square&label=ci)](https://github.com/worldline-go/forward/actions)
-[![Go Reference](https://pkg.go.dev/badge/github.com/worldline-go/forward.svg)](https://pkg.go.dev/github.com/worldline-go/forward)
+[![Go PKG](https://raw.githubusercontent.com/worldline-go/guide/main/badge/custom/reference.svg)](https://pkg.go.dev/github.com/worldline-go/forward)
 
 Export socket connection to HTTP service with filter options.
 
@@ -48,7 +48,7 @@ sudo ./forward -s '/var/run/docker.sock:/:-POST,-PUT,-DELETE'
 There are scratch and alpine version of container image.
 
 ```sh
-docker run -p 8080:8080 -v /var/run/docker.sock:/docker.sock ghcr.io/worldline-go/forward -s /docker.sock:/:-POST,-PUT,-DELETE,-PATCH
+docker run --rm -it -p 8080:8080 -v /var/run/docker.sock:/docker.sock ghcr.io/worldline-go/forward -s /docker.sock:/:-POST,-PUT,-DELETE,-PATCH
 ```
 
 ## Development

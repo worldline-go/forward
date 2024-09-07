@@ -55,7 +55,7 @@ func SocketHandler(socketURLPath string, socketPath string, methods *FilterMetho
 }
 
 // SocketParser parse socketconfig and record in the mux.
-func SocketParser(socketConfigs []string, handlerFunc func(string, func(http.ResponseWriter, *http.Request))) {
+func SocketParser(name string, socketConfigs []string, handlerFunc func(string, func(http.ResponseWriter, *http.Request))) {
 	// /var/run/docker.sock:/docker/:*,-POST,-PUT,-DELETE
 	for _, socketConfig := range socketConfigs {
 		socketList := strings.Split(socketConfig, ":")
@@ -72,7 +72,7 @@ func SocketParser(socketConfigs []string, handlerFunc func(string, func(http.Res
 			socketMethods.Parse(strings.Split(socketList[2], ","))
 		}
 
-		slog.Info(fmt.Sprintf("socket route [%s] to [%s]; %s", socketURLPath, socketPath, socketMethods))
+		slog.Info(fmt.Sprintf("%s - route [%s] to [%s]; %s", name, socketURLPath, socketPath, socketMethods))
 
 		handlerFunc(socketURLPath, SocketHandler(socketURLPath, socketPath, socketMethods))
 	}

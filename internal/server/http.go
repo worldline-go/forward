@@ -30,7 +30,7 @@ func ServeHTTP() []Server {
 	for _, value := range values {
 		mux := http.NewServeMux()
 		// Add handler functions here
-		handler.SocketParser(value.Socket, mux.HandleFunc)
+		handler.SocketParser(value.Name, value.Socket, mux.HandleFunc)
 
 		s := &http.Server{
 			Addr:    value.Host,

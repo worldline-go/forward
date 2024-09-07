@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/worldline-go/forward?color=red&style=flat-square)](https://raw.githubusercontent.com/worldline-go/forward/main/LICENSE)
 [![Coverage](https://img.shields.io/sonar/coverage/worldline-go_forward?logo=sonarcloud&server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/summary/overall?id=worldline-go_forward)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/worldline-go/forward/Test?logo=github&style=flat-square&label=ci)](https://github.com/worldline-go/forward/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/worldline-go/forward/test.yml?branch=main&logo=github&style=flat-square&label=ci)](https://github.com/worldline-go/forward/actions)
 [![Go PKG](https://raw.githubusercontent.com/worldline-go/guide/main/badge/custom/reference.svg)](https://pkg.go.dev/github.com/worldline-go/forward)
 
 Export socket connection to HTTP service with filter options.
@@ -37,11 +37,29 @@ HTTP methods could be any string(case insensitive), and starting with `-` will n
 /var/run/docker.sock:/docker/:-*
 ```
 
-If program cannot access the socket, you will get `502 Bad Gateway` on every request.
-
 ```sh
 sudo ./forward -s '/var/run/docker.sock:/:-POST,-PUT,-DELETE'
 ```
+
+If you need multiple ports with multiple sockets than give name before prefix of `@`.
+
+```sh
+forward -H localhost@127.0.0.1:8082 -s 'localhost@/var/run/docker.sock'
+```
+
+Use `-H` and `-s` more than once to make connections.
+
+```sh
+forward -H localhost@127.0.0.1:8082 -s 'localhost@/var/run/docker.sock' -H share@0.0.0.0:8080 -s 'share@/var/run/docker.sock:/:-POST,-PUT,-DELETE'
+
+# 2024-09-07 21:01:45 CEST INF forward version: v0.0.0 commit: - buildDate:-
+# 2024-09-07 21:01:45 CEST INF localhost - route [/] to [/var/run/docker.sock]; allow: *; deny:
+# 2024-09-07 21:01:45 CEST INF share - route [/] to [/var/run/docker.sock]; allow: *; deny: DELETE,POST,PUT
+# 2024-09-07 21:01:45 CEST INF server share on [0.0.0.0:8080]
+# 2024-09-07 21:01:45 CEST INF server localhost on [127.0.0.1:8082]
+```
+
+If program cannot access the socket, you will get `502 Bad Gateway` on every request.
 
 ### Docker
 

@@ -2,10 +2,9 @@ package args
 
 import (
 	"context"
-	"os"
-	"os/signal"
+	"log/slog"
 
-	"github.com/rs/zerolog/log"
+	"github.com/rakunlabs/into"
 	"github.com/worldline-go/forward/internal/config"
 	"github.com/worldline-go/forward/internal/info"
 	"github.com/worldline-go/forward/internal/server"
@@ -14,14 +13,16 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "forward",
-	Short:   "export connections",
-	Long:    "export socket to HTTP",
+	Use:           "forward",
+	Short:         "export connections",
+	Long:          "export socket to HTTP",
+	SilenceErrors: true,
+	SilenceUsage:  true,
+	Example: `  Multiple hosts and sockets:
+    forward -H x@0.0.0.0:8080 -s x@/test.sock -H y@0.0.0.0:8081 -s y@/test2.sock
+  Share docker socket with only GET method:
+    forward -s /var/run/docker.sock:/:*,-POST,-PUT,-DELETE`,
 	Version: "v0.0.0",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		config.InitializeLog()
-		config.SetLogLevel(config.Application.LogLevel)
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runForward(cmd.Context())
 	},
@@ -30,39 +31,27 @@ var rootCmd = &cobra.Command{
 // Execute is the entry point for the application.
 func Execute(ctx context.Context) error {
 	rootCmd.Version = info.AppInfo.Version
-	rootCmd.Long += "\nversion: " + info.AppInfo.Version + " commit: " + info.AppInfo.BuildCommit + " buildDate:" + info.AppInfo.BuildDate
+	rootCmd.Long += "\n" + longInfo()
 	return rootCmd.ExecuteContext(ctx)
 }
 
-func init() {
-	rootCmd.Flags().StringVarP(&config.Application.Host, "host", "H", config.Application.Host, "Host to listen on, default: 0.0.0.0:8080")
-	rootCmd.Flags().StringArrayVarP(&config.Application.Serve.Socket, "socket", "s", config.Application.Serve.Socket, "Socket to export: /var/run/docker.sock:/docker/:*,-POST,-PUT,-DELETE")
+func longInfo() string {
+	return "version: " + info.AppInfo.Version + " commit: " + info.AppInfo.BuildCommit + " buildDate:" + info.AppInfo.BuildDate
 }
 
-func runForward(ctx context.Context) error {
-	chNotify := make(chan os.Signal, 1)
-	signal.Notify(chNotify, os.Interrupt)
-	defer func() {
-		signal.Stop(chNotify)
-		close(chNotify)
-	}()
+func init() {
+	rootCmd.Flags().StringArrayVarP(&config.Application.Hosts, "host", "H", config.Application.Hosts, "Host to listen on")
+	rootCmd.Flags().StringArrayVarP(&config.Application.Sockets, "socket", "s", config.Application.Sockets, "Socket to export: /var/run/docker.sock:/:*,-POST,-PUT,-DELETE")
+}
+
+func runForward(_ context.Context) error {
+	slog.Info("forward " + longInfo())
 
 	httpServer := server.ServeHTTP()
 
-	go func() {
-		select {
-		case <-ctx.Done():
-			log.Error().Msg("unable continue process, shutting down...")
-		case <-chNotify:
-			log.Info().Msg("gracefully shutting down...")
-		}
+	into.ShutdownAdd(func() error {
+		return server.StopHTTP(httpServer)
+	}, into.WithShutdownName("http server"))
 
-		server.StopHTTP(httpServer) //nolint:errcheck
-	}()
-
-	if err := server.StartHTTP(httpServer); err != nil {
-		return err
-	}
-
-	return nil
+	return server.StartHTTP(httpServer)
 }

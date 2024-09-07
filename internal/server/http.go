@@ -3,68 +3,96 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/worldline-go/forward/internal/config"
 	"github.com/worldline-go/forward/internal/handler"
-	"github.com/worldline-go/forward/internal/server/mux"
+	"golang.org/x/sync/errgroup"
 )
 
 var serverShutdownTimeout = 5 * time.Second
 
+type Server struct {
+	Server *http.Server
+	Name   string
+}
+
 // ServeHTTP returns a new HTTP server.
-func ServeHTTP() *http.Server {
-	mux := &mux.Mux{}
+func ServeHTTP() []Server {
+	values := Parse(config.Application.Hosts, config.Application.Sockets)
+	var servers []Server
 
-	// Add handler functions here
-	handler.SocketParser(config.Application.Serve.Socket, mux.HandleFunc)
+	for _, value := range values {
+		mux := http.NewServeMux()
+		// Add handler functions here
+		handler.SocketParser(value.Socket, mux.HandleFunc)
 
-	// Not found
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not found")) //nolint:errcheck
-	})
+		s := &http.Server{
+			Addr:    value.Host,
+			Handler: mux,
+		}
 
-	s := &http.Server{
-		Addr:           config.Application.Host,
-		Handler:        mux,
-		MaxHeaderBytes: 1 << 20,
+		servers = append(servers, Server{
+			Server: s,
+			Name:   value.Name,
+		})
 	}
 
-	return s
+	return servers
 }
 
 // StartHTTP starts the HTTP server.
-func StartHTTP(server *http.Server) error {
+func StartHTTP(server []Server) error {
 	if server == nil {
 		return nil
 	}
 
-	log.Info().Msgf("server on [%s]", config.Application.Host)
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
+	group := errgroup.Group{}
+
+	for _, s := range server {
+		group.Go(func() error {
+			slog.Info(fmt.Sprintf("server %s on [%s]", s.Name, s.Server.Addr))
+			if err := s.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				return err
+			}
+
+			return nil
+		})
 	}
 
-	log.Info().Msg("server stopped gracefully")
+	if err := group.Wait(); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // StopHTTP stops the HTTP server.
-func StopHTTP(server *http.Server) error {
-	if server == nil {
-		return nil
-	}
-
-	log.Info().Msg("server stopping...")
+func StopHTTP(server []Server) error {
+	slog.Info("server stopping...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
-		return err
+	wg := sync.WaitGroup{}
+
+	for _, s := range server {
+		if s.Server == nil {
+			continue
+		}
+
+		wg.Add(1)
+		go func(name string, s *http.Server) {
+			defer wg.Done()
+
+			if err := s.Shutdown(ctx); err != nil {
+				slog.Error("server shutdown error", slog.String("error", err.Error()), slog.String("server", name))
+			}
+		}(s.Name, s.Server)
 	}
 
 	return nil

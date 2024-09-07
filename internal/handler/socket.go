@@ -2,12 +2,12 @@ package handler
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 )
 
 // SocketDirector is a reverse proxy director that rewrites the URL path to
@@ -35,10 +35,14 @@ func SocketHandler(socketURLPath string, socketPath string, methods *FilterMetho
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if methods.Match(r.Method) {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, socketURLPath)
-			if r.URL.Path[0] != '/' {
-				r.URL.Path = "/" + r.URL.Path
+			path := strings.TrimPrefix(r.URL.Path, socketURLPath)
+			if path == "" {
+				path = "/"
+			} else if path[0] != '/' {
+				path = "/" + path
 			}
+
+			r.URL.Path = path
 
 			sockClient.ServeHTTP(w, r)
 
@@ -58,7 +62,7 @@ func SocketParser(socketConfigs []string, handlerFunc func(string, func(http.Res
 		socketList := strings.Split(socketConfig, ":")
 
 		if len(socketList) < 2 {
-			continue
+			socketList = append(socketList, "/")
 		}
 
 		socketPath := socketList[0]
@@ -69,7 +73,7 @@ func SocketParser(socketConfigs []string, handlerFunc func(string, func(http.Res
 			socketMethods.Parse(strings.Split(socketList[2], ","))
 		}
 
-		log.Info().Msgf("socket route [%s] to [%s]; %s", socketURLPath, socketPath, socketMethods)
+		slog.Info(fmt.Sprintf("socket route [%s] to [%s]; %s", socketURLPath, socketPath, socketMethods))
 
 		handlerFunc(socketURLPath, SocketHandler(socketURLPath, socketPath, socketMethods))
 	}

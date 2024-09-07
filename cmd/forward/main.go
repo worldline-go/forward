@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
-	"os"
-
-	"github.com/rs/zerolog/log"
+	"github.com/rakunlabs/into"
+	"github.com/rakunlabs/logi"
 	"github.com/worldline-go/forward/cmd/forward/args"
 	"github.com/worldline-go/forward/internal/info"
 )
@@ -12,8 +10,8 @@ import (
 var (
 	// Populated by goreleaser during build
 	version = "v0.0.0"
-	commit  = "?"
-	date    = ""
+	commit  = "-"
+	date    = "-"
 )
 
 func main() {
@@ -22,8 +20,10 @@ func main() {
 	info.AppInfo.BuildCommit = commit
 	info.AppInfo.BuildDate = date
 
-	if err := args.Execute(context.Background()); err != nil {
-		log.Error().Err(err).Msg("failed to execute")
-		os.Exit(1)
-	}
+	into.Init(
+		args.Execute,
+		into.WithLogger(logi.InitializeLog(logi.WithCaller(false))),
+		into.WithStartFn(nil),
+		into.WithStopFn(nil),
+	)
 }

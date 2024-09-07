@@ -1,3 +1,3 @@
-FROM alpine:3.16.0
-ENTRYPOINT ["/forward"]
+FROM alpine:3.20.3
 COPY forward /
+ENTRYPOINT ["/forward"]
